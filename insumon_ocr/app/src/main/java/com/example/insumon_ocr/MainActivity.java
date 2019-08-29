@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.SeekBar;
@@ -35,6 +36,8 @@ public class MainActivity extends AppCompatActivity {
     Bitmap bitmap1;
     boolean clicked = false;
 
+    int b = 515;
+
     AndroidFrameConverter converterToBitmap;
     OpenCVFrameConverter.ToIplImage converterToIplImage;
     OpenCVFrameConverter.ToMat converterToMat;
@@ -64,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
         roi = converterToIplImage.convertToMat(frame);
         cvtColor(roi, roi, opencv_imgproc.COLOR_RGB2GRAY);
 
-        process(515);
+        process(1051);
     }
 
     public void process(int bsize){
@@ -76,19 +79,19 @@ public class MainActivity extends AppCompatActivity {
         opencv_imgproc.GaussianBlur(roi, blurred,new opencv_core.Size(15,15),0,0,0);
         //thresh
         opencv_core.Mat thresh= new opencv_core.Mat(roi.rows(), roi.cols(), roi.type());
-        opencv_imgproc.adaptiveThreshold(blurred, thresh, 255, 1,0, bsize, 25);
+        opencv_imgproc.adaptiveThreshold(blurred, thresh, 255, 1,0, bsize, 20);
 
         //erode1  iter :2
         opencv_core.Mat erode1=thresh;
         opencv_core.Mat element_e1 = opencv_imgproc.getStructuringElement(0,new opencv_core.Size(3, 3));
-        for (int i=0;i<10;i++) {
+        for (int i=0;i<30;i++) {
             opencv_imgproc.erode( erode1, erode1, element_e1);
         }
 //		BufferedImage image = matToBufferedImage(erode1);
 
         //dialte1  iter:2
         opencv_core.Mat dialte1=erode1;
-        opencv_core.Mat element_d1 = opencv_imgproc.getStructuringElement(0,new opencv_core.Size(7, 7));
+        opencv_core.Mat element_d1 = opencv_imgproc.getStructuringElement(0,new opencv_core.Size(5, 5));
         for (int i=0;i<2;i++) {
             opencv_imgproc.dilate(dialte1, dialte1, element_d1);
         }
@@ -125,8 +128,11 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void trans(View view) {
+        b = b+200;
+        process(b);
+        System.out.println(String.valueOf(b));
 //        if(!clicked){
-//            imageView.setImageBitmap(bitmap1);
+//            process(515);
 //            clicked = !clicked;
 //        }else{
 //            imageView.setImageBitmap(bitmap);
