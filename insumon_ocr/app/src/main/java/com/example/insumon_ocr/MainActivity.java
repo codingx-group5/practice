@@ -36,7 +36,8 @@ public class MainActivity extends AppCompatActivity {
     Bitmap bitmap1;
     boolean clicked = false;
 
-    int b = 515;
+    int b = 1351;
+    int c = 15;
 
     AndroidFrameConverter converterToBitmap;
     OpenCVFrameConverter.ToIplImage converterToIplImage;
@@ -49,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         imageView = (ImageView) findViewById(R.id.imgV);
-        skb = (SeekBar) findViewById(R.id.seekBar);
+        //skb = (SeekBar) findViewById(R.id.seekBar);
 
         imageView.invalidate();
         BitmapDrawable drawable = (BitmapDrawable) imageView.getDrawable();
@@ -67,10 +68,10 @@ public class MainActivity extends AppCompatActivity {
         roi = converterToIplImage.convertToMat(frame);
         cvtColor(roi, roi, opencv_imgproc.COLOR_RGB2GRAY);
 
-        process(1051);
+        process(b,c);
     }
 
-    public void process(int bsize){
+    public void process(int bsize,int c){
         //roi = opencv_imgcodecs.imread("C:/blood/demo_output/279_roi.jpg", CV_8UC1);
 
 
@@ -79,12 +80,12 @@ public class MainActivity extends AppCompatActivity {
         opencv_imgproc.GaussianBlur(roi, blurred,new opencv_core.Size(15,15),0,0,0);
         //thresh
         opencv_core.Mat thresh= new opencv_core.Mat(roi.rows(), roi.cols(), roi.type());
-        opencv_imgproc.adaptiveThreshold(blurred, thresh, 255, 1,0, bsize, 20);
+        opencv_imgproc.adaptiveThreshold(blurred, thresh, 255, 1,0, bsize, c);
 
         //erode1  iter :2
         opencv_core.Mat erode1=thresh;
         opencv_core.Mat element_e1 = opencv_imgproc.getStructuringElement(0,new opencv_core.Size(3, 3));
-        for (int i=0;i<30;i++) {
+        for (int i=0;i<20;i++) {
             opencv_imgproc.erode( erode1, erode1, element_e1);
         }
 //		BufferedImage image = matToBufferedImage(erode1);
@@ -128,8 +129,8 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void trans(View view) {
-        b = b+200;
-        process(b);
+        b = b+50;
+        process(b,c);
         System.out.println(String.valueOf(b));
 //        if(!clicked){
 //            process(515);
@@ -138,5 +139,11 @@ public class MainActivity extends AppCompatActivity {
 //            imageView.setImageBitmap(bitmap);
 //            clicked = !clicked;
 //        }
+    }
+
+    public void transc(View view) {
+        c = c+5;
+        process(b,c);
+        System.out.println(">>"+String.valueOf(c));
     }
 }
