@@ -14,14 +14,12 @@
         android:padding="10dp">
 
 
-
-
         <ImageView
             android:id="@+id/imgV"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="0.2"
-            android:src="@drawable/i279"/>
+            android:src="@drawable/i279" />
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
