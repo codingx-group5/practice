@@ -36,7 +36,6 @@ import static org.bytedeco.javacpp.opencv_imgproc.cvtColor;
 import org.bytedeco.leptonica.global.lept;
 
 import com.sun.jna.ptr.PointerByReference;
-//import  com.ochafik.lang.jnaerator.runtime.NativeSize;
 import org.bytedeco.leptonica.*;
 
 
@@ -90,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
 
         roi = converterToIplImage.convertToMat(frame);
 
-        roi = poss.compress(roi,0.9);
+        roi = poss.compress(roi);
 
         poss.process(roi,b,c);
 
@@ -127,45 +126,45 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    public String EnglishOCR(){
-
-        final TessBaseAPI baseApi = new TessBaseAPI();
-        //初始化OCR的训练数据路径与语言
-
-        baseApi.Init(TESSBASE_PATH, DEFAULT_LANGUAGE);
-        //设置识别模式
-        baseApi.SetPageSegMode(7);
-        //设置要识别的图片
-        if (Mat_after.empty()) {
-            return "";
-        }
-
-
-
-        baseApi.SetImage(image2Scan);
-
-
-        english.setImageBitmap();
-        englishtext.setText(baseApi.getUTF8Text());
-        baseApi.clear();
-        baseApi.end();
-    }
-
-    public static PIX convertMatToPix(Mat mat) {
-        MatOfByte bytes = new MatOfByte();
-        Imgcodecs.imencode(".tif", mat, bytes);
-        ByteBuffer buff = ByteBuffer.wrap(bytes.toArray());
-
-        return lept.pixReadMem(buff, new NativeSize(buff.capacity()));
-
-    }
-
-    public static Mat convertPixToMat(PIX pix) {
-        PointerByReference pdata = new PointerByReference();
-        NativeSizeByReference psize = new NativeSizeByReference();
-        Leptonica1.pixWriteMem(pdata, psize, pix, ILeptonica.IFF_TIFF);
-        byte[] b = pdata.getValue().getByteArray(0, psize.getValue().intValue());
-        Leptonica1.lept_free(pdata.getValue());
-        return Imgcodecs.imdecode(new MatOfByte(b), Imgcodecs.CV_LOAD_IMAGE_UNCHANGED);
-    }
+//    public String EnglishOCR(){
+//
+//        final TessBaseAPI baseApi = new TessBaseAPI();
+//        //初始化OCR的训练数据路径与语言
+//
+//        baseApi.Init(TESSBASE_PATH, DEFAULT_LANGUAGE);
+//        //设置识别模式
+//        baseApi.SetPageSegMode(7);
+//        //设置要识别的图片
+//        if (Mat_after.empty()) {
+//            return "";
+//        }
+//
+//
+//
+//        baseApi.SetImage(image2Scan);
+//
+//
+//        english.setImageBitmap();
+//        englishtext.setText(baseApi.getUTF8Text());
+//        baseApi.clear();
+//        baseApi.end();
+//    }
+//
+//    public static PIX convertMatToPix(Mat mat) {
+//        MatOfByte bytes = new MatOfByte();
+//        Imgcodecs.imencode(".tif", mat, bytes);
+//        ByteBuffer buff = ByteBuffer.wrap(bytes.toArray());
+//
+//        return lept.pixReadMem(buff, new NativeSize(buff.capacity()));
+//
+//    }
+//
+//    public static Mat convertPixToMat(PIX pix) {
+//        PointerByReference pdata = new PointerByReference();
+//        NativeSizeByReference psize = new NativeSizeByReference();
+//        Leptonica1.pixWriteMem(pdata, psize, pix, ILeptonica.IFF_TIFF);
+//        byte[] b = pdata.getValue().getByteArray(0, psize.getValue().intValue());
+//        Leptonica1.lept_free(pdata.getValue());
+//        return Imgcodecs.imdecode(new MatOfByte(b), Imgcodecs.CV_LOAD_IMAGE_UNCHANGED);
+//    }
 }

@@ -6,11 +6,14 @@ import android.widget.ImageView;
 
 import org.bytedeco.javacpp.opencv_core;
 import org.bytedeco.javacpp.opencv_core.*;
+
+import static org.bytedeco.javacpp.RealSense.any;
 import static org.bytedeco.javacpp.opencv_imgproc.*;
 import static org.bytedeco.javacpp.opencv_imgproc.GaussianBlur;
 import static org.bytedeco.javacpp.opencv_imgproc.cvtColor;
 import static org.bytedeco.javacpp.opencv_imgproc.COLOR_RGB2GRAY;
 
+import org.bytedeco.javacpp.opencv_imgproc;
 import org.bytedeco.javacv.AndroidFrameConverter;
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.OpenCVFrameConverter;
@@ -25,10 +28,12 @@ public class Process {
     private OpenCVFrameConverter.ToIplImage converterToIplImage;
     private OpenCVFrameConverter.ToMat converterToMat;
 
-    public Mat compress(Mat m, double scaleFactor){
+    public Mat compress(Mat img_before){
         // compress img
         //out Mat
-        return m;
+        Mat resizeimage = new Mat();
+        opencv_imgproc.resize(img_before, resizeimage, new Size(70,40));
+        return resizeimage;
     }
 
     public void process(Mat roi, int bsize, int c) {
