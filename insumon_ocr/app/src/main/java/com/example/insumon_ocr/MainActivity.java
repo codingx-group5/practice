@@ -3,6 +3,7 @@ package com.example.insumon_ocr;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
@@ -28,9 +29,16 @@ import org.bytedeco.javacv.OpenCVFrameConverter;
 import org.bytedeco.tesseract.TessBaseAPI;
 //import org.opencv.android.Utils;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
+import java.util.Scanner;
+import java.util.stream.Collectors;
 
 import static org.bytedeco.javacpp.opencv_core.IPL_DEPTH_8U;
 import static org.bytedeco.javacpp.opencv_imgproc.cvtColor;
@@ -67,6 +75,10 @@ public class MainActivity extends AppCompatActivity {
     public Process poss;
     public ImgConvertor conver = new ImgConvertor();
 
+
+
+    private TessBaseAPI detector;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -88,6 +100,45 @@ public class MainActivity extends AppCompatActivity {
         //bitmap = poss.getBitmap();
 
         imageView.setImageBitmap(poss.getBitmap());
+
+
+        AssetManager assetManager = getAssets();
+        InputStream inputStream;
+
+        try {
+            inputStream = assetManager.open("tessdata/letsgodigital.traineddata");
+            inputStream.close();
+
+
+            BufferedInputStream bis = new BufferedInputStream(inputStream);
+            ByteArrayOutputStream buf = new ByteArrayOutputStream();
+            int result = 0;
+            try {
+                result = bis.read();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            while(result != -1) {
+                buf.write((byte) result);
+                try {
+                    result = bis.read();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            String str = buf.toString();
+
+
+
+//            detector = new TessBaseAPI();
+//            detector.Init(TESSBASE_PATH, "letsgodigital");
+
+            Log.d("in","read");
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.d("in","not read");
+        }
+
 
 
 
@@ -112,6 +163,10 @@ public class MainActivity extends AppCompatActivity {
         imageView.setImageBitmap(poss.getBitmap());
         System.out.println("C >> " + String.valueOf(c));
     }
+
+
+
+
 
 //    public void setImage(Bitmap bmp) {
 //        image2Scan = ReadFile.readBitmap(bmp);
