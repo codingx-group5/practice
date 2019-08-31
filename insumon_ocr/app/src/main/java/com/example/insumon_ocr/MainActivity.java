@@ -2,15 +2,20 @@ package com.example.insumon_ocr;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.os.Environment;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.SeekBar;
+import android.widget.TextView;
 
-import org.bytedeco.javacpp.opencv_core;
+import org.bytedeco.javacpp.opencv_core.*;
 import org.bytedeco.javacpp.opencv_imgcodecs;
 import org.bytedeco.javacpp.opencv_imgproc;
 
@@ -20,31 +25,57 @@ import static org.bytedeco.javacpp.opencv_core.IPL_DEPTH_8U;
 import org.bytedeco.javacv.AndroidFrameConverter;
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.OpenCVFrameConverter;
+import org.bytedeco.tesseract.TessBaseAPI;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.nio.ByteBuffer;
+
 import static org.bytedeco.javacpp.opencv_core.IPL_DEPTH_8U;
 import static org.bytedeco.javacpp.opencv_imgproc.cvtColor;
+import org.bytedeco.leptonica.global.lept;
+
+import com.sun.jna.ptr.PointerByReference;
+//import  com.ochafik.lang.jnaerator.runtime.NativeSize;
+import org.bytedeco.leptonica.*;
+
+
+import org.bytedeco.leptonica.PIX;
+import org.opencv.core.MatOfByte;
+import org.opencv.imgcodecs.Imgcodecs;
+
 
 public class MainActivity extends AppCompatActivity {
-    public opencv_core.Mat roi;
+    public Mat roi;
     public ImageView imageView;
-
 
 
     Bitmap bitmap;
     Bitmap bitmap_after;
-    boolean clicked = false;
+    Mat Mat_after;
+
+    PIX image2Scan;
 
     int b = 1351;
     int c = 15;
+
+    //训练数据路径，必须包含tesseract文件夹
+    static final String TESSBASE_PATH = "/storage/emulated/0/Download/tesseract/";
+    //识别语言英文
+    static final String DEFAULT_LANGUAGE = "eng";
+    //识别语言简体中文
+    static final String CHINESE_LANGUAGE = "chi_sim";
 
     AndroidFrameConverter converterToBitmap;
     OpenCVFrameConverter.ToIplImage converterToIplImage;
     OpenCVFrameConverter.ToMat converterToMat;
 
+    public Process poss = new Process();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
 
 
         imageView = (ImageView) findViewById(R.id.imgV);
@@ -55,73 +86,86 @@ public class MainActivity extends AppCompatActivity {
         bitmap = drawable.getBitmap();
 
 
-
-
-        converterToBitmap = new AndroidFrameConverter();
-        converterToIplImage = new OpenCVFrameConverter.ToIplImage();
-        converterToMat = new OpenCVFrameConverter.ToMat();
-
-
         Frame frame = converterToBitmap.convert(bitmap);
 
         roi = converterToIplImage.convertToMat(frame);
 
+        roi = poss.compress(roi,0.9);
 
-        process(b,c);
-    }
-
-    public void process(int bsize,int c){
-
-        //gray
-        opencv_core.Mat gray=new opencv_core.Mat(roi.rows(),roi.cols(),roi.type());
-        cvtColor(roi, gray, opencv_imgproc.COLOR_RGB2GRAY);
-        //Gaussianblur
-        opencv_core.Mat blurred=new opencv_core.Mat(roi.rows(),roi.cols(),roi.type());
-        opencv_imgproc.GaussianBlur(gray, blurred,new opencv_core.Size(15,15),0,0,0);
-        //thresh
-        opencv_core.Mat thresh= new opencv_core.Mat(roi.rows(), roi.cols(), roi.type());
-        opencv_imgproc.adaptiveThreshold(blurred, thresh, 255, 1,0, bsize, c);
-
-        //erode1  iter :2
-        opencv_core.Mat erode1=thresh;
-        opencv_core.Mat element_e1 = opencv_imgproc.getStructuringElement(0,new opencv_core.Size(3, 3));
-        for (int i=0;i<20;i++) {
-            opencv_imgproc.erode( erode1, erode1, element_e1);
-        }
-
-
-        //dialte1  iter:2
-        opencv_core.Mat dialte1=erode1;
-        opencv_core.Mat element_d1 = opencv_imgproc.getStructuringElement(0,new opencv_core.Size(5, 5));
-        for (int i=0;i<2;i++) {
-            opencv_imgproc.dilate(dialte1, dialte1, element_d1);
-        }
+        poss.process(roi,b,c);
 
 
 
-
-
-
-        Frame frame_after = converterToMat.convert(dialte1);
-        bitmap_after = converterToBitmap.convert(frame_after);
-
-        imageView.setImageBitmap(bitmap_after);
-
-
+        Mat_after = poss.getMat();
     }
 
 
 
 
     public void trans(View view) {
-        b = b+50;
-        process(b,c);
+        b = b + 50;
+        poss.process(roi,b, c);
         System.out.println(String.valueOf(b));
     }
 
     public void transc(View view) {
-        c = c+5;
-        process(b,c);
-        System.out.println(">>"+String.valueOf(c));
+        c = c + 5;
+        poss.process(roi,b, c);
+        System.out.println(">>" + String.valueOf(c));
+    }
+
+//    public void setImage(Bitmap bmp) {
+//        image2Scan = ReadFile.readBitmap(bmp);
+//
+//        if (image == null) {
+//            throw new RuntimeException("Failed to read bitmap");
+//        }
+//
+//        nativeSetImagePix(image.getNativePix());
+//    }
+
+
+
+
+    public String EnglishOCR(){
+
+        final TessBaseAPI baseApi = new TessBaseAPI();
+        //初始化OCR的训练数据路径与语言
+
+        baseApi.Init(TESSBASE_PATH, DEFAULT_LANGUAGE);
+        //设置识别模式
+        baseApi.SetPageSegMode(7);
+        //设置要识别的图片
+        if (Mat_after.empty()) {
+            return "";
+        }
+
+
+
+        baseApi.SetImage(image2Scan);
+
+
+        english.setImageBitmap();
+        englishtext.setText(baseApi.getUTF8Text());
+        baseApi.clear();
+        baseApi.end();
+    }
+
+    public static PIX convertMatToPix(Mat mat) {
+        MatOfByte bytes = new MatOfByte();
+        Imgcodecs.imencode(".tif", mat, bytes);
+        ByteBuffer buff = ByteBuffer.wrap(bytes.toArray());
+
+        return lept.pixReadMem(buff, new NativeSize(buff.capacity()));
+
+    }
+
+    public static Mat convertPixToMat(PIX pix) {
+        PointerByReference pdata = new PointerByReference();
+        NativeSizeByReference psize = new NativeSizeByReference();
+        Leptonica1.pixWriteMem(pdata, psize, pix, ILeptonica.IFF_TIFF);
+        byte[] b = pdata.getValue().getByteArray(0, psize.getValue().intValue());
+        Leptonica1.lept_free(pdata.getValue());
+        return Imgcodecs.imdecode(new MatOfByte(b), Imgcodecs.CV_LOAD_IMAGE_UNCHANGED);
     }
 }
