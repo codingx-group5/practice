@@ -26,6 +26,7 @@ import org.bytedeco.javacv.AndroidFrameConverter;
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.OpenCVFrameConverter;
 import org.bytedeco.tesseract.TessBaseAPI;
+//import org.opencv.android.Utils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -40,12 +41,14 @@ import org.bytedeco.leptonica.*;
 
 
 import org.bytedeco.leptonica.PIX;
-import org.opencv.core.MatOfByte;
+import org.opencv.android.Utils;
+//import org.opencv.core;
 import org.opencv.imgcodecs.Imgcodecs;
 
 
 public class MainActivity extends AppCompatActivity {
     public Mat roi;
+    //public Mat roi;
     public ImageView imageView;
 
 
@@ -53,23 +56,16 @@ public class MainActivity extends AppCompatActivity {
     Bitmap bitmap_after;
     Mat Mat_after;
 
-    PIX image2Scan;
 
     int b = 1351;
     int c = 15;
 
-    //训练数据路径，必须包含tesseract文件夹
-    static final String TESSBASE_PATH = "/storage/emulated/0/Download/tesseract/";
-    //识别语言英文
-    static final String DEFAULT_LANGUAGE = "eng";
-    //识别语言简体中文
-    static final String CHINESE_LANGUAGE = "chi_sim";
+    public AndroidFrameConverter converterToBitmap;
+    public OpenCVFrameConverter.ToIplImage converterToIplImage;
+    public OpenCVFrameConverter.ToMat converterToMat;
 
-    AndroidFrameConverter converterToBitmap;
-    OpenCVFrameConverter.ToIplImage converterToIplImage;
-    OpenCVFrameConverter.ToMat converterToMat;
-
-    public Process poss = new Process();
+    public Process poss;
+    public ImgConvertor conver = new ImgConvertor();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,24 +74,26 @@ public class MainActivity extends AppCompatActivity {
 
 
         imageView = (ImageView) findViewById(R.id.imgV);
+        Bitmap bit = conver.imagev2Bitmap(imageView);
+
+        roi = conver.imagev2Mat(imageView);
+
+        poss = new Process(roi);
+
+        poss.compress(roi.cols()/2,roi.rows()/2);
+        //poss.process(b,c);
+
+        poss.process(b,c);
+
+        //bitmap = poss.getBitmap();
+
+        imageView.setImageBitmap(poss.getBitmap());
 
 
-        imageView.invalidate();
-        BitmapDrawable drawable = (BitmapDrawable) imageView.getDrawable();
-        bitmap = drawable.getBitmap();
-
-
-        Frame frame = converterToBitmap.convert(bitmap);
-
-        roi = converterToIplImage.convertToMat(frame);
-
-        roi = poss.compress(roi);
-
-        poss.process(roi,b,c);
 
 
 
-        Mat_after = poss.getMat();
+        //Mat_after = poss.getMat();
     }
 
 
@@ -103,14 +101,16 @@ public class MainActivity extends AppCompatActivity {
 
     public void trans(View view) {
         b = b + 50;
-        poss.process(roi,b, c);
-        System.out.println(String.valueOf(b));
+        poss.process(b, c);
+        imageView.setImageBitmap(poss.getBitmap());
+        System.out.println("B >> " + String.valueOf(b));
     }
 
     public void transc(View view) {
         c = c + 5;
-        poss.process(roi,b, c);
-        System.out.println(">>" + String.valueOf(c));
+        poss.process(b, c);
+        imageView.setImageBitmap(poss.getBitmap());
+        System.out.println("C >> " + String.valueOf(c));
     }
 
 //    public void setImage(Bitmap bmp) {

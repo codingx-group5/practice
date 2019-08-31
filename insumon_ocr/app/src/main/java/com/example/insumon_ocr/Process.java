@@ -21,31 +21,34 @@ import org.bytedeco.javacv.OpenCVFrameConverter;
 
 public class Process {
 
-    private Mat dialte1;
-    private Bitmap bitmap_after;
+    private Mat mardata;
+    private Bitmap bitmapdata;
 
-    private AndroidFrameConverter converterToBitmap;
-    private OpenCVFrameConverter.ToIplImage converterToIplImage;
-    private OpenCVFrameConverter.ToMat converterToMat;
+    public AndroidFrameConverter converterToBitmap = new AndroidFrameConverter();
+    public OpenCVFrameConverter.ToIplImage converterToIplImage = new OpenCVFrameConverter.ToIplImage();
+    public OpenCVFrameConverter.ToMat converterToMat =  new OpenCVFrameConverter.ToMat();
 
-    public Mat compress(Mat img_before){
-        // compress img
-        //out Mat
-        Mat resizeimage = new Mat();
-        opencv_imgproc.resize(img_before, resizeimage, new Size(70,40));
-        return resizeimage;
+
+    public Process(Mat getMat){
+        mardata = getMat;
     }
 
-    public void process(Mat roi, int bsize, int c) {
+    public void compress(int w, int h){
+        Mat resizeimage = new Mat();
+        resize(mardata, resizeimage, new Size(w,h));
+        mardata = resizeimage;
+    }
+
+    public void process(int bsize, int c) {
 
         //gray
-        Mat gray = new Mat(roi.rows(), roi.cols(), roi.type());
-        cvtColor(roi, gray, COLOR_RGB2GRAY);
+        Mat gray = new Mat(mardata.rows(), mardata.cols(), mardata.type());
+        cvtColor(mardata, gray, COLOR_RGB2GRAY);
         //Gaussianblur
-        Mat blurred = new Mat(roi.rows(), roi.cols(), roi.type());
+        Mat blurred = new Mat(mardata.rows(), mardata.cols(), mardata.type());
         GaussianBlur(gray, blurred, new Size(15, 15), 0, 0, 0);
         //thresh
-        Mat thresh = new Mat(roi.rows(), roi.cols(), roi.type());
+        Mat thresh = new Mat(mardata.rows(), mardata.cols(), mardata.type());
         adaptiveThreshold(blurred, thresh, 255, 1, 0, bsize, c);
 
         //erode1  iter :2
@@ -57,20 +60,21 @@ public class Process {
 
 
         //dialte1  iter:2
-        dialte1 = erode1;
+        mardata = erode1;
         Mat element_d1 = getStructuringElement(0, new Size(5, 5));
         for (int i = 0; i < 2; i++) {
-            dilate(dialte1, dialte1, element_d1);
+            dilate(mardata, mardata, element_d1);
         }
     }
 
     public Mat getMat(){
-        return  dialte1;
+        return  mardata;
     }
 
     public Bitmap getBitmap(){
-        Frame frame_after = converterToMat.convert(dialte1);
-        bitmap_after = converterToBitmap.convert(frame_after);
-        return  bitmap_after;
+        Frame frame_after = converterToMat.convert(mardata);
+        Bitmap bitAfter = converterToBitmap.convert(frame_after);
+        return  bitAfter;
     }
+
 }
