@@ -27,15 +27,18 @@ import org.bytedeco.javacv.AndroidFrameConverter;
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.OpenCVFrameConverter;
 import org.bytedeco.tesseract.TessBaseAPI;
-//import org.opencv.android.Utils;
+import org.opencv.android.Utils;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.Scanner;
 import java.util.stream.Collectors;
@@ -76,6 +79,9 @@ public class MainActivity extends AppCompatActivity {
     public ImgConvertor conver = new ImgConvertor();
 
 
+    public String datapath = getFilesDir()+ "/tesseract/";
+
+
 
     private TessBaseAPI detector;
 
@@ -100,51 +106,22 @@ public class MainActivity extends AppCompatActivity {
         //bitmap = poss.getBitmap();
 
         imageView.setImageBitmap(poss.getBitmap());
-
-
-        AssetManager assetManager = getAssets();
-        InputStream inputStream;
-
-        try {
-            inputStream = assetManager.open("tessdata/letsgodigital.traineddata");
-            inputStream.close();
-
-
-            BufferedInputStream bis = new BufferedInputStream(inputStream);
-            ByteArrayOutputStream buf = new ByteArrayOutputStream();
-            int result = 0;
-            try {
-                result = bis.read();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            while(result != -1) {
-                buf.write((byte) result);
-                try {
-                    result = bis.read();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            String str = buf.toString();
-
-
-
-//            detector = new TessBaseAPI();
-//            detector.Init(TESSBASE_PATH, "letsgodigital");
-
-            Log.d("in","read");
-        } catch (IOException e) {
-            e.printStackTrace();
-            Log.d("in","not read");
-        }
+        checkFile(new File(datapath + "tessdata/"), "letsgodigital");
 
 
 
 
 
 
-        //Mat_after = poss.getMat();
+
+
+
+
+
+
+
+
+
     }
 
 
@@ -165,6 +142,52 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+
+
+
+
+    private void checkFile(File dir, String language) {
+        //如果目前不存在则创建方面，然后在判断训练数据文件是否存在
+        if (!dir.exists() && dir.mkdirs()) {
+            copyFiles(language);
+        }
+        if (dir.exists()) {
+            String datafilepath = datapath + "/tessdata/" + language + ".traineddata";
+            File datafile = new File(datafilepath);
+            if (!datafile.exists()) {
+                copyFiles(language);
+            }
+        }
+    }
+
+
+
+
+    /**
+     把训练数据放到手机内存
+     * @param language "chi_sim" ,"eng"
+     */
+    private void copyFiles(String language) {
+        try {
+            String filepath = datapath + "/tessdata/" + language + ".traineddata";
+            AssetManager assetManager = getAssets();
+            InputStream instream = assetManager.open("tessdata/" + language + ".traineddata");
+            OutputStream outstream = new FileOutputStream(filepath);
+            byte[] buffer = new byte[1024];
+            int read;
+            while ((read = instream.read(buffer)) != -1) {
+                outstream.write(buffer, 0, read);
+            }
+            outstream.flush();
+            outstream.close();
+            instream.close();
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
 
 
